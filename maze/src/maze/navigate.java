@@ -8,6 +8,7 @@ import java.util.Stack;
 import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.Arrays;
+import java.util.ArrayList;
 
 public class navigate {
 	
@@ -63,12 +64,15 @@ public class navigate {
 
 		visited = reverseQueue(visited); //reverse the Queue so you can backtrack from the $ to the W
 		
+		ArrayList<Position> coordinates = new ArrayList<Position>();
+		
 		int len = visited.size(); //variable for visited.size() because visited.size() changes when elements are removed
 		Position element = visited.remove(); //first element in the queue visited
 		Position nextElement = visited.element();  //2nd element
 		for (int i = 0; i < len; i++) {
 			if (isNeighbor(element, nextElement)) {
 				arr[nextElement.getRow()][nextElement.getCol()].setSymbol("+");
+				coordinates.add(arr[nextElement.getRow()][nextElement.getCol()]);
 				element = nextElement;
 			}
 			if (i < len - 1) {  //this if statement is to avoid runtime errors
@@ -87,13 +91,9 @@ public class navigate {
 		
 		System.out.println();
 		
-		System.out.println("Coordinates of path: ");
-		for (int i = 0; i < arr.length; i++) {
-			for (int j = 0; j < arr[0].length; j++) {
-				if (arr[i][j].getSymbol().equals("+")) {
-					System.out.println(arr[i][j]);
-				}
-			}
+		System.out.println("Coordinates of path: "); //coordinates are added to ArrayList "coordinates" in reverse order
+		for (int i = coordinates.size()-1; i >= 0; i--) { 
+			System.out.println(coordinates.get(i)); //prints from size-1  ->  0
 		}
 	}
 	
