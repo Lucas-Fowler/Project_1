@@ -76,12 +76,24 @@ public class navigate {
 			}
 		}
 		
-		String[][] output = new String[arr.length][arr[0].length];
+		System.out.println("Maze with path: ");
+		String[][] output = new String[arr.length][arr[0].length]; //2D output format
 		for (int i = 0; i < output.length; i++) {
 			for (int j = 0; j < output[0].length; j++) {
 				output[i][j] = arr[i][j].getSymbol();
 			}
 			System.out.println(Arrays.toString(output[i]));
+		}
+		
+		System.out.println();
+		
+		System.out.println("Coordinates of path: ");
+		for (int i = 0; i < arr.length; i++) {
+			for (int j = 0; j < arr[0].length; j++) {
+				if (arr[i][j].getSymbol().equals("+")) {
+					System.out.println(arr[i][j]);
+				}
+			}
 		}
 	}
 	
@@ -117,7 +129,7 @@ public class navigate {
 	
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-		Scanner myReader = new Scanner(new BufferedReader(new FileReader("Test1")));     
+		Scanner myReader = new Scanner(new BufferedReader(new FileReader("Test3")));     //test different mazes here
 		String data = myReader.nextLine();
 		int rows = Integer.parseInt(data.substring(0, 1));
 		int cols = Integer.parseInt(data.substring(2, 3));
@@ -133,8 +145,13 @@ public class navigate {
   			  r++; //increments the rows of s
 	    	  }
 	    }
-		for (int i = 0; i < arr.length; i++) {
-			System.out.println(Arrays.toString(arr[i]));
+		System.out.println("Original Maze: ");
+		String[][] original = new String[arr.length][arr[0].length]; //2D output format
+		for (int i = 0; i < original.length; i++) {
+			for (int j = 0; j < original[0].length; j++) {
+				original[i][j] = arr[i][j].getSymbol();
+			}
+			System.out.println(Arrays.toString(original[i]));
 		}
 		System.out.println();
 		navigateWithQueue(arr);
