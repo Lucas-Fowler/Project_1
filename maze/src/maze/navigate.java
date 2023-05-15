@@ -129,10 +129,12 @@ public class navigate {
 	
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-		Scanner myReader = new Scanner(new BufferedReader(new FileReader("Test2")));     //test different mazes here
+		Scanner myReader = new Scanner(new BufferedReader(new FileReader("Test3")));     //test different mazes here
 		String data = myReader.nextLine();
-		int rows = Integer.parseInt(data.substring(0, 1));
-		int cols = Integer.parseInt(data.substring(2, 3));
+		String stringRow = data.substring(0, data.indexOf(" "));
+		String stringCol = data.substring(stringRow.length() + 1, data.indexOf(" ", 3));
+		int rows = Integer.parseInt(stringRow);
+		int cols = Integer.parseInt(stringCol);
 		Position[][] arr = new Position[rows][cols];
 		int r = 0; //to set the rows for the for loop
 		while (myReader.hasNextLine()) {
