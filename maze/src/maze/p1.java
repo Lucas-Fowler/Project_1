@@ -12,7 +12,7 @@ import java.util.ArrayList;
 
 public class p1 {
 	
-	public static boolean isSafe(int row, int col, Position[][] arr, Queue<Position> mainQ, Queue<Position> visited) {
+	public static boolean isSafeQ(int row, int col, Position[][] arr, Queue<Position> mainQ, Queue<Position> visited) {
 		if (visited.isEmpty()) { //can't check if visited.contains(element) when there is nothing in visited until after the first iteration
 			return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|")) 
 					&& !mainQ.contains(arr[row][col])); 
@@ -21,6 +21,14 @@ public class p1 {
 				&& !mainQ.contains(arr[row][col]) && !visited.contains(arr[row][col]));
 	}
 	
+	public static boolean isSafeS(int row, int col, Position[][] arr, Stack<Position> mainS, Stack<Position> visited) {
+		if (visited.isEmpty()) { //can't check if visited.contains(element) when there is nothing in visited until after the first iteration
+			return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|")) 
+					&& !mainS.contains(arr[row][col])); 
+		}
+		return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|"))
+				&& !mainS.contains(arr[row][col]) && !visited.contains(arr[row][col]));
+	}
 	
 	public static Position findW(Position[][] arr) {
 		Position w = null;
@@ -63,7 +71,7 @@ public class p1 {
 		return Integer.parseInt(mazeInfo[2]);
 	}
 	
-	public static void navigateMazesQ(String str) throws Exception {
+	public static void findPathQ(String str) throws Exception {
 		Position[][] arr = scanto2DArr(str);
 		int numMazes = getNumMazes(str);
 		System.out.println("Original Maze: "); //print original maze
@@ -95,6 +103,38 @@ public class p1 {
 		}
 	}
 	
+	public static void findPathS(String str) throws Exception {
+		Position[][] arr = scanto2DArr(str);
+		int numMazes = getNumMazes(str);
+		System.out.println("Original Maze: "); //print original maze
+		String[][] original = new String[arr.length][arr[0].length]; //2D output format
+		for (int i = 0; i < original.length; i++) {
+			for (int j = 0; j < original[0].length; j++) {
+				original[i][j] = arr[i][j].getSymbol();
+			}
+			System.out.println(Arrays.toString(original[i]));
+		}
+		System.out.println();
+		
+		ArrayList<Position[][]> mazes = new ArrayList<Position[][]>(); //arraylist of every maze in the text file
+		int startRow = 0;
+		for (int i = 0; i < numMazes; i++) {   //adding each maze to "mazes"
+			Position[][] temp = new Position[arr.length/numMazes][arr[0].length];
+			for (int r = startRow; r < arr.length/numMazes + startRow; r++) {
+				for (int c = 0; c < arr[0].length; c++) {
+					temp[r-startRow][c] = new Position(arr[r][c].getSymbol(), r-startRow, c);
+				}
+			}
+			mazes.add(temp);
+			startRow += temp.length;
+		}
+		System.out.println("Maze with path: ");
+		for (int i = 0; i < numMazes; i++) {
+			Position[][] maze = mazes.get(i);
+			navigateWithStack(maze);
+		}
+	}
+	
 	public static void navigateWithQueue(Position[][] arr) {
 		Queue<Position> mainQ = new ArrayDeque<Position>();
 		Queue<Position> visited = new ArrayDeque<Position>();
@@ -109,7 +149,7 @@ public class p1 {
 			currRow = mainQ.element().getRow();
 			currCol = mainQ.element().getCol();
 			for (int i = 0; i < 4; i++) {
-				if (isSafe(currRow+r[i], currCol+c[i], arr, mainQ, visited)) { //checking if surrounding elements are valid
+				if (isSafeQ(currRow+r[i], currCol+c[i], arr, mainQ, visited)) { //checking if surrounding elements are valid
 					mainQ.add(arr[currRow+r[i]][currCol+c[i]]); //adding them to the mainQ
 				}
 			}
@@ -180,12 +220,89 @@ public class p1 {
 		return reverse;
 	}
 	
-	public void findPathStack(Position[][] arr) {
+	public static void navigateWithStack(Position[][] arr) {
+		Stack<Position> mainS = new Stack<Position>();
+		Stack<Position> visited = new Stack<Position>();
+		Position w = findW(arr);  //finding position of W
+		int currRow = w.getRow();
+		int currCol = w.getCol();
+		mainS.push(w);
+		int[] r = {-1, 1, 0, 0}; //north south east west
+		int[] c = {0, 0, 1, -1};
+		while (!arr[currRow][currCol].getSymbol().equals("$") && !arr[currRow][currCol].getSymbol().equals("|")) {
+			currRow = peekFirstStack(mainS).getRow();
+			currCol = peekFirstStack(mainS).getCol();
+			for (int i = 0; i < 4; i++) {
+				if (isSafeS(currRow+r[i], currCol+c[i], arr, mainS, visited)) { //checking if surrounding elements are valid
+					mainS.add(arr[currRow+r[i]][currCol+c[i]]); //adding them to the mainS
+				}
+			}
+			visited.add(removeFromStack(mainS)); //removing from the beginning of mainQ and adding to visited
+//			System.out.println3arr[currRow][currCol]);
+//			System.out.println(visited);
+		}
+		removeFromStack(visited);  //removing the W because we aren't changing the symbol to a "+"
 		
+		ArrayList<Position> coordinates = new ArrayList<Position>();
+		
+		int len = visited.size(); //variable for visited.size() because visited.size() changes when elements are removed
+		Position element = visited.pop(); //first element in the queue visited
+		Position nextElement = visited.peek();  //2nd element
+		for (int i = 0; i < len; i++) {
+			if (isNeighbor(element, nextElement)) {
+				arr[nextElement.getRow()][nextElement.getCol()].setSymbol("+");
+				coordinates.add(arr[nextElement.getRow()][nextElement.getCol()]);
+				element = nextElement;
+			}
+			if (i < len - 1) {  //this if statement is to avoid runtime errors
+				nextElement = visited.pop();
+			}
+		}
+		
+		String[][] output = new String[arr.length][arr[0].length]; //2D output format
+		for (int i = 0; i < output.length; i++) {
+			for (int j = 0; j < output[0].length; j++) {
+				output[i][j] = arr[i][j].getSymbol();
+			}
+			System.out.println(Arrays.toString(output[i]));
+		}
+	}
+	
+	public static Position peekFirstStack(Stack<Position> s) {
+		Stack<Position> popStack = new Stack<Position>();
+		int len = s.size();
+		for (int i = 0; i < len - 1; i++) {
+			popStack.push(s.pop());
+		}
+		Position pop = s.peek();
+		len = popStack.size();
+		for (int i = 0; i < len; i++) {
+			s.push(popStack.pop());
+		}
+		return pop;
+	}
+	
+	public static Position removeFromStack(Stack<Position> s) {
+		Stack<Position> popStack = new Stack<Position>();
+		int len = s.size();
+		for (int i = 0; i < len - 1; i++) {
+			popStack.push(s.pop());
+		}
+		Position pop = s.pop();
+		len = popStack.size();
+		for (int i = 0; i < len; i++) {
+			s.push(popStack.pop());
+		}
+		return pop;
 	}
 	
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-		navigateMazesQ("TestDoor");
+		System.out.println("Queue method:");
+		findPathQ("TestDoor");
+		System.out.println();
+		System.out.println();
+		System.out.println("Stack method:");
+		findPathS("TestDoor");
 	}
 }
