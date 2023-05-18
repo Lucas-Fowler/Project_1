@@ -158,6 +158,9 @@ public class navigate {
 		return reverse;
 	}
 	
+	public void findPathStack(Position[][] arr) {
+		
+	}
 	
 	
 	public static void main(String[] args) throws Exception {
