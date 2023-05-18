@@ -1,5 +1,6 @@
 package maze;
 
+
 public class Position {
 	private String symbol;
 	private int row;
