@@ -14,10 +14,10 @@ public class navigate {
 	
 	public static boolean isSafe(int row, int col, Position[][] arr, Queue<Position> mainQ, Queue<Position> visited) {
 		if (visited.isEmpty()) { //can't check if visited.contains(element) when there is nothing in visited until after the first iteration
-			return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$")) 
+			return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|")) 
 					&& !mainQ.contains(arr[row][col])); 
 		}
-		return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$"))
+		return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|"))
 				&& !mainQ.contains(arr[row][col]) && !visited.contains(arr[row][col]));
 	}
 	
@@ -34,11 +34,48 @@ public class navigate {
 		return w;
 	}
 	
+	public static boolean has$(Position[][] arr) {
+		for (int r = 0; r < arr.length; r++) {
+			for (int c = 0; c < arr[0].length; c++) {
+				if (arr[r][c].getSymbol().equals("$")) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+	
+	public static void navigateMazesQ(Position[][] arr, int numMazes) {
+		ArrayList<Position[][]> mazes = new ArrayList<Position[][]>();
+		int startRow = 0;
+		for (int i = 0; i < numMazes; i++) {   //adding each maze to "mazes"
+			Position[][] temp = new Position[arr.length/numMazes][arr[0].length];
+			for (int r = startRow; r < arr.length/numMazes + startRow; r++) {
+				for (int c = 0; c < arr[0].length; c++) {
+					temp[r-startRow][c] = new Position(arr[r][c].getSymbol(), r-startRow, c);
+				}
+			}
+			mazes.add(temp);
+			startRow += temp.length;
+		}
+//		for (int i = 0; i < numMazes; i++) {
+//			Position[][] maze = mazes.get(i);
+//			for (int j = 0; j < maze.length; j++) {
+//				System.out.println(Arrays.toString(maze[j]));
+//			}
+//			System.out.println();
+//		}
+		System.out.println("Maze with path: ");
+		for (int i = 0; i < numMazes; i++) {
+			Position[][] maze = mazes.get(i);
+			navigateWithQueue(maze);
+		}
+		
+	}
 	
 	public static void navigateWithQueue(Position[][] arr) {
 		Queue<Position> mainQ = new ArrayDeque<Position>();
 		Queue<Position> visited = new ArrayDeque<Position>();
-		
 		Position w = findW(arr);  //finding position of W
 		int currRow = w.getRow();
 		int currCol = w.getCol();
@@ -46,8 +83,7 @@ public class navigate {
 		
 		int[] r = {-1, 1, 0, 0}; //north south east west
 		int[] c = {0, 0, 1, -1};
-		
-		while (!arr[currRow][currCol].getSymbol().equals("$")) {
+		while (!arr[currRow][currCol].getSymbol().equals("$") && !arr[currRow][currCol].getSymbol().equals("|")) {
 			currRow = mainQ.element().getRow();
 			currCol = mainQ.element().getCol();
 			for (int i = 0; i < 4; i++) {
@@ -56,12 +92,12 @@ public class navigate {
 				}
 			}
 			visited.add(mainQ.remove()); //removing from the beginning of mainQ and adding to visited
-//			System.out.println(arr[currRow][currCol]);
+//			System.out.println3arr[currRow][currCol]);
 //			System.out.println(visited);
 		}
+		
 		visited.remove();  //removing the W because we aren't changing the symbol to a "+"
 		
-
 		visited = reverseQueue(visited); //reverse the Queue so you can backtrack from the $ to the W
 		
 		ArrayList<Position> coordinates = new ArrayList<Position>();
@@ -80,7 +116,6 @@ public class navigate {
 			}
 		}
 		
-		System.out.println("Maze with path: ");
 		String[][] output = new String[arr.length][arr[0].length]; //2D output format
 		for (int i = 0; i < output.length; i++) {
 			for (int j = 0; j < output[0].length; j++) {
@@ -89,12 +124,10 @@ public class navigate {
 			System.out.println(Arrays.toString(output[i]));
 		}
 		
-		System.out.println();
-		
-		System.out.println("Coordinates of path: "); //coordinates are added to ArrayList "coordinates" in reverse order
-		for (int i = coordinates.size()-1; i >= 0; i--) { 
-			System.out.println(coordinates.get(i)); //prints from size-1  ->  0
-		}
+//		System.out.println("Coordinates of path: "); //coordinates are added to ArrayList "coordinates" in reverse order
+//		for (int i = coordinates.size()-1; i >= 0; i--) { 
+//			System.out.println(coordinates.get(i)); //prints from size-1  ->  0
+//		}
 	}
 	
 	
@@ -129,12 +162,12 @@ public class navigate {
 	
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-		Scanner myReader = new Scanner(new BufferedReader(new FileReader("Test3")));     //test different mazes here
+		Scanner myReader = new Scanner(new BufferedReader(new FileReader("TestDoor")));     //test different mazes here
 		String data = myReader.nextLine();
-		String stringRow = data.substring(0, data.indexOf(" "));
-		String stringCol = data.substring(stringRow.length() + 1, data.indexOf(" ", 3));
-		int rows = Integer.parseInt(stringRow);
-		int cols = Integer.parseInt(stringCol);
+		String[] mazeInfo = data.split(" ");
+		int numMazes = Integer.parseInt(mazeInfo[2]); //number of mazes
+		int rows = Integer.parseInt(mazeInfo[0]) * numMazes; //number of rows
+		int cols = Integer.parseInt(mazeInfo[1]); //number of columns
 		Position[][] arr = new Position[rows][cols];
 		int r = 0; //to set the rows for the for loop
 		while (myReader.hasNextLine()) {
@@ -147,6 +180,8 @@ public class navigate {
   			  r++; //increments the rows of s
 	    	  }
 	    }
+		
+		
 		System.out.println("Original Maze: ");
 		String[][] original = new String[arr.length][arr[0].length]; //2D output format
 		for (int i = 0; i < original.length; i++) {
@@ -156,6 +191,6 @@ public class navigate {
 			System.out.println(Arrays.toString(original[i]));
 		}
 		System.out.println();
-		navigateWithQueue(arr);
+		navigateMazesQ(arr, numMazes);
 	}
 }
