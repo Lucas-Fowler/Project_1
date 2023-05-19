@@ -243,6 +243,7 @@ public class p1 {
 	}
 	
 	
+	
 	//stack-based approach that we are finding runtime for
 	public static void navigateWithStack(Position[][] arr) { 
 		Stack<Position> mainS = new Stack<Position>();
@@ -291,7 +292,6 @@ public class p1 {
 			System.out.println(Arrays.toString(output[i]));
 		}
 	}
-	
 	
 	//Queue-based approach that we are finding runtime for
 	public static void navigateWithQueue(Position[][] arr) {
@@ -378,7 +378,6 @@ public class p1 {
 			//findPathOpt(file);
 		}
 	}
-	
 	
 	
 	//used for testing purposes
