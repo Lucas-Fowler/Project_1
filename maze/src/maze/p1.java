@@ -263,8 +263,6 @@ public class p1 {
 				}
 			}
 			visited.add(removeFromStack(mainS)); //removing from the beginning of mainQ and adding to visited
-//			System.out.println3arr[currRow][currCol]);
-//			System.out.println(visited);
 		}
 		removeFromStack(visited);  //removing the W because we aren't changing the symbol to a "+"
 		
@@ -400,12 +398,5 @@ public class p1 {
 		
 		//findPathQ("TestCoordinateInput2");
 		runCommands("TestCoordinateInput2");
-		
-//		System.out.println("Queue method:");
-//		findPathQ("TestDoor");
-//		System.out.println();
-//		System.out.println();
-//		System.out.println("Stack method:");
-//		findPathS("TestDoor");
 	}
 }
