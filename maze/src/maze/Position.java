@@ -5,12 +5,13 @@ public class Position {
 	private String symbol;
 	private int row;
 	private int col;
+	private int maze;
 	
-	
-	public Position(String paramSymbol, int paramRow, int paramCol) {
+	public Position(String paramSymbol, int paramRow, int paramCol, int paramMaze) {
 		symbol = paramSymbol;
 		row = paramRow;
 		col = paramCol;
+		maze = paramMaze;
 	}
 	
 	public String getSymbol() {
@@ -38,6 +39,10 @@ public class Position {
 	}
 	
 	public String toString() {
-		return symbol + " " + row + " " + col;
+		return symbol + " " + row + " " + col + " " + maze;
+	}
+	
+	public int getMaze() {
+		return maze;
 	}
 }

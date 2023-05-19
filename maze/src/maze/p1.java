@@ -9,6 +9,7 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.Arrays;
 import java.util.ArrayList;
+import Exceptions.IllegalCharacterException;
 
 public class p1 {
 	
@@ -35,88 +36,115 @@ public class p1 {
 	}	
 	
 	//scans file to see how many mazes there are (can run this on either input format because it will always have (rows, cols, numMazes) as the first line
-	public static int getNumMazes(String s) throws Exception {  
-		Scanner myReader = new Scanner(new BufferedReader(new FileReader(s))); 
-		String data = myReader.nextLine();
-		String[] mazeInfo = data.split(" ");
-		return Integer.parseInt(mazeInfo[2]);
+	public static int getNumMazes(String file) {  
+		try {
+			File f = new File(file);
+			Scanner myReader = new Scanner(f); 
+			String data = myReader.nextLine();
+			String[] mazeInfo = data.split(" ");
+			return Integer.parseInt(mazeInfo[2]);
+		} catch(FileNotFoundException e) {
+			System.out.println("File not found");
+			System.exit(-1);
+		}
+		return (Integer) null;
 	}	
 	
 	
 	
 	//3 METHODS FOR SCANNING A TEXT FILE
 	//This method scans a coordinate-based text file and returns an ArrayList<Position>  
-	public static ArrayList<Position[][]> inputCoordinate(String str) throws Exception {
-		Scanner myReader = new Scanner(new BufferedReader(new FileReader(str)));     //test different mazes here
-		String data = myReader.nextLine();
-		String[] mazeInfo = data.split(" ");
-		int numMazes = Integer.parseInt(mazeInfo[2]); //number of mazes
-		
-		ArrayList<Position[][]> mazes = new ArrayList<Position[][]>();  //arraylist of every maze in the text file
-		
-		int maze = 0;
-		int rows = Integer.parseInt(mazeInfo[0]); //number of rows
-		int cols = Integer.parseInt(mazeInfo[1]); //number of columns
-		for (int i = 0; i < numMazes; i++) {
-			Position[][] temp = new Position[rows][cols];  //create one individual maze
-			for (int checkRow = 0; checkRow < temp.length; checkRow++) {
-				for (int checkCol = 0; checkCol < temp[0].length; checkCol++) {
-					temp[checkRow][checkCol] = new Position(".", checkRow, checkCol); 
+	public static ArrayList<Position[][]> inputCoordinate(String str) throws IllegalCharacterException {
+		try {
+			File f = new File(str);
+			Scanner myReader = new Scanner(f);
+			String data = myReader.nextLine();
+			String[] mazeInfo = data.split(" ");
+			int numMazes = Integer.parseInt(mazeInfo[2]); //number of mazes
+			int rows = Integer.parseInt(mazeInfo[0]); //number of rows
+			int cols = Integer.parseInt(mazeInfo[1]); //number of columns
+			
+			ArrayList<Position[][]> mazes = new ArrayList<Position[][]>();  //arraylist of every maze in the text file
+			
+			int mazeNum = 0;
+			for (int i = 0; i < numMazes; i++) {
+				Position[][] temp = new Position[rows][cols];  //create one individual maze
+				for (int checkRow = 0; checkRow < temp.length; checkRow++) {
+					for (int checkCol = 0; checkCol < temp[0].length; checkCol++) {
+						temp[checkRow][checkCol] = new Position(".", checkRow, checkCol, mazeNum); 
+					}
 				}
+				while (myReader.hasNextLine() && mazeNum == i) {  //while there is a next line in the file and i is the same as the maze number
+					data = myReader.nextLine(); //sets 
+					String[] coordinateInfo = data.split(" ");
+					mazeNum = Integer.parseInt(coordinateInfo[3]);
+					int R = Integer.parseInt(coordinateInfo[1]); 
+					int C = Integer.parseInt(coordinateInfo[2]);
+					temp[R][C] = new Position(coordinateInfo[0], R, C, mazeNum);
+					//System.out.println(temp[R][C]);
+					//System.out.println(maze);
+					//System.out.println();
+				}
+				mazes.add(temp);
 			}
-			while (myReader.hasNextLine() && maze == i) {  //while there is a next line in the file and i is the same as the maze number
-				data = myReader.nextLine(); //sets 
-				String[] coordinateInfo = data.split(" ");
-				maze = Integer.parseInt(coordinateInfo[3]);
-				int R = Integer.parseInt(coordinateInfo[1]); 
-				int C = Integer.parseInt(coordinateInfo[2]);
-				temp[R][C] = new Position(coordinateInfo[0], R, C);
-				//System.out.println(temp[R][C]);
-				//System.out.println(maze);
-				//System.out.println();
-			}
-			mazes.add(temp);
-		}
-		return mazes;
+			return mazes;
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			System.out.println("File Not Found");
+			System.exit(-1);
+		}    
+		return null;
 	}
 	//This method scans a text-map-based text file and returns an ArrayList<Position>
-	public static ArrayList<Position[][]> inputTextMap(String str) throws Exception {
-		Scanner myReader = new Scanner(new BufferedReader(new FileReader(str)));     //test different mazes here
-		String data = myReader.nextLine();
-		String[] mazeInfo = data.split(" ");
-		int numMazes = Integer.parseInt(mazeInfo[2]); //number of mazes
-		int rows = Integer.parseInt(mazeInfo[0]) * numMazes; //number of rows
-		int cols = Integer.parseInt(mazeInfo[1]); //number of columns		
-		
-		Position[][] arr = new Position[rows][cols]; //2D array of all positions in the text map
-		
-		int r = 0; //to set the rows for the for loop
-		while (myReader.hasNextLine()) {
-	    	//reading the next line in the file
-	    	data = myReader.nextLine(); //sets to the first line of the actual maze
-	    	for (int c = 0; c < cols; c++) {
-	    		Position p = new Position(data.substring(c, c+1), r, c);
-	    		arr[r][c] = p; 
-	    	}
-	    	if (myReader.hasNextLine()) {
-  			r++; //increments the rows of s
-	    	}
-	    }
-		
-		ArrayList<Position[][]> mazes = new ArrayList<Position[][]>();  //arraylist of every maze in the text file
-		System.out.println();
-		int startRow = 0;
-		for (int i = 0; i < numMazes; i++) {   //adding each maze to "mazes"
-			Position[][] temp = new Position[arr.length/numMazes][arr[0].length];
-			for (int row = startRow; row < arr.length/numMazes + startRow; row++) {
-				for (int col = 0; col < arr[0].length; col++) {
-					temp[row-startRow][col] = new Position(arr[row][col].getSymbol(), row-startRow, col);
+	public static ArrayList<Position[][]> inputTextMap(String str) throws IllegalCharacterException {
+		try {
+			File f = new File(str);
+			Scanner myReader = new Scanner(f);     //test different mazes here
+			String data = myReader.nextLine();
+			String[] mazeInfo = data.split(" ");
+			int numMazes = Integer.parseInt(mazeInfo[2]); //number of mazes
+			int rows = Integer.parseInt(mazeInfo[0]) * numMazes; //number of rows
+			int cols = Integer.parseInt(mazeInfo[1]); //number of columns		
+			
+			Position[][] arr = new Position[rows][cols]; //2D array of all positions in the text map
+			
+			int r = 0; //to set the rows for the for loop
+			while (myReader.hasNextLine()) {
+		    	//reading the next line in the file
+		    	data = myReader.nextLine(); //sets to the first line of the actual maze
+		    	for (int c = 0; c < cols; c++) {
+		    		Position p = new Position(data.substring(c, c+1), r, c, 0);
+		    		arr[r][c] = p; 
+		    		if (!isLegal(arr[r][c])) {
+		    			throw new IllegalCharacterException("TextMap has illegal character");
+		    		}
+		    	}
+		    	if (myReader.hasNextLine()) {
+	  			r++; //increments the rows of s
+		    	}
+		    }
+			
+			ArrayList<Position[][]> mazes = new ArrayList<Position[][]>();  //arraylist of every maze in the text file
+			System.out.println();
+			int mazeNum = 0;
+			int startRow = 0;
+			for (int i = 0; i < numMazes; i++) {   //adding each maze to "mazes"
+				Position[][] temp = new Position[arr.length/numMazes][arr[0].length];
+				for (int row = startRow; row < arr.length/numMazes + startRow; row++) {
+					for (int col = 0; col < arr[0].length; col++) {
+						temp[row-startRow][col] = new Position(arr[row][col].getSymbol(), row-startRow, col, mazeNum);
+					}
 				}
+				mazeNum++;
+				mazes.add(temp);
+				startRow += temp.length;
 			}
-			mazes.add(temp);
-			startRow += temp.length;
+			return mazes;
+		} catch(FileNotFoundException e) {
+			System.out.println("File Not Found");
+			System.exit(-1);
 		}
-		return mazes;
+		return null;
 	}
 	//scans text file (can be either coordinate-based format or text-map format) and returns 2D array
 	public static ArrayList<Position[][]> scanToMazes(String str) throws Exception {
@@ -124,22 +152,12 @@ public class p1 {
 			return inputCoordinate(str);
 		} 
 		return inputTextMap(str);	
-		//INPUT FORMAT?
-//		System.out.println("Original Maze: "); //print original maze
-//		String[][] original = new String[arr.length][arr[0].length]; //2D output format
-//		for (int i = 0; i < original.length; i++) {
-//			for (int j = 0; j < original[0].length; j++) {
-//				original[i][j] = arr[i][j].getSymbol();
-//			}
-//			System.out.println(Arrays.toString(original[i]));
-//		}
-//		System.out.println();
 	}	
 	
 		
 	//checks for illegal characters
 	public static boolean isLegal(Position p) {
-		return p.getSymbol().equals(".") || p.getSymbol().equals("@") || p.getSymbol().equals("$") || p.getSymbol().equals("|");
+		return p.getSymbol().equals("W") || p.getSymbol().equals(".") || p.getSymbol().equals("@") || p.getSymbol().equals("$") || p.getSymbol().equals("|");
 	}
 	//tests if position is valid for Queue
 	//tests if position object is an open path/open walkway/Diamond Wolverine buck, and can get to this position from the W
@@ -228,7 +246,6 @@ public class p1 {
 	public static void findPathS(String str) throws Exception {
 		ArrayList<Position[][]> mazes = scanToMazes(str); //arraylist of every maze in the text file
 		int numMazes = getNumMazes(str);
-		System.out.println("Maze with path: ");
 		for (int i = 0; i < numMazes; i++) {
 			Position[][] temp = mazes.get(i);
 			navigateWithStack(temp);
@@ -238,7 +255,6 @@ public class p1 {
 	public static void findPathQ(String str) throws Exception {
 		ArrayList<Position[][]> mazes = scanToMazes(str); //arraylist of every maze in the text file
 		int numMazes = getNumMazes(str);
-		System.out.println("Maze with path: ");
 		for (int i = 0; i < numMazes; i++) {
 			Position[][] temp = mazes.get(i);
 			navigateWithQueue(temp);
@@ -262,7 +278,7 @@ public class p1 {
 			currCol = peekFirstStack(mainS).getCol();
 			for (int i = 0; i < 4; i++) {
 				if (isSafeS(currRow+r[i], currCol+c[i], arr, mainS, visited)) { //checking if surrounding elements are valid
-					mainS.add(arr[currRow+r[i]][currCol+c[i]]); //adding them to the mainS
+					mainS.push(arr[currRow+r[i]][currCol+c[i]]); //adding them to the mainS
 				}
 			}
 			visited.add(removeFromStack(mainS)); //removing from the beginning of mainQ and adding to visited
@@ -285,12 +301,12 @@ public class p1 {
 			}
 		}
 		
-		String[][] output = new String[arr.length][arr[0].length]; //2D output format
-		for (int i = 0; i < output.length; i++) {
-			for (int j = 0; j < output[0].length; j++) {
-				output[i][j] = arr[i][j].getSymbol();
+		if (Outcoordinate) {
+			for (int i = coordinates.size()-1; i >= 0; i--) { 
+				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
 			}
-			System.out.println(Arrays.toString(output[i]));
+		} else {
+			print2DArray(arr);
 		}
 	}
 	
@@ -335,19 +351,17 @@ public class p1 {
 				nextElement = visited.remove();
 			}
 		}
-		
-		String[][] output = new String[arr.length][arr[0].length]; //2D output format
-		for (int i = 0; i < output.length; i++) {
-			for (int j = 0; j < output[0].length; j++) {
-				output[i][j] = arr[i][j].getSymbol();
+		if (Outcoordinate) {
+			//coordinates are added to ArrayList "coordinates" in reverse order
+			for (int i = coordinates.size()-1; i >= 0; i--) { 
+				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
 			}
-			System.out.println(Arrays.toString(output[i]));
+		} else {
+			//2D Map output format
+			print2DArray(arr);
 		}
 		
-//		System.out.println("Coordinates of path: "); //coordinates are added to ArrayList "coordinates" in reverse order
-//		for (int i = coordinates.size()-1; i >= 0; i--) { 
-//			System.out.println(coordinates.get(i)); //prints from size-1  ->  0
-//		}
+		
 	}
 	
 	
@@ -384,7 +398,11 @@ public class p1 {
 	//used for testing purposes
 	public static void print2DArray(Position[][] p) {
 		for (int r = 0; r < p.length; r++) {
-			System.out.println(Arrays.toString(p[r]));
+			String output = "";
+			for (int c = 0; c < p[0].length; c++) {
+				output += p[r][c].getSymbol();
+			}
+			System.out.println(output);
 		}
 	}
 	
@@ -398,32 +416,67 @@ public class p1 {
 	
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
-		Incoordinate = false;
 //		for (int i = 0; i < args.length-1; i++) {
 //			switch (args[i]) {
 //				case "--Stack": 
-//					findPathS(args[args.length-1]);
+//					Stack = true;
 //					break;
 //				case "--Queue":
-//					findPathQ(args[args.length-1]);
+//					Queue = true;
 //					break;
-//				case "--Opt": 
-//					findPathOpt(args[args.length-1]);
-//					break; 
-//				case "--Incoordinate":
+//				case "--Opt":
+//					Opt = true;
+//					break;
+//				case "--Incoordinate": 
 //					Incoordinate = true;
+//					break;
+//				case "--Outcoordinate":
+//					Outcoordinate = true;
+//					break;
+//				case "--Time": 
+//					Time = true;
+//					break; 
+//				default: 
+//					System.out.println("No command line arguments found");
 //					break;
 //			}
 //		}
-		findPathS("Test3");
-		Stack = true;
-		Queue = false;
+//		int count = 0; 
+//		if (Stack) {
+//			count++;
+//		}
+//		if (Queue) {
+//			count++;
+//		}
+//		if (Opt) {
+//			count++;
+//		}
+//		if (count > 1) { //testing to see if none or more than one option is specified
+//			System.out.println("Can't test more than one routing approach");
+//			System.exit(-1);
+//		} else if (count == 0) {
+//			System.out.println("No routing approach was selected");
+//			System.exit(-1);
+//		}
+//		if (Stack) {
+//			findPathS(args[args.length-1]);
+//		} else if (Queue) {
+//			findPathQ(args[args.length-1]);
+//		} else if (Opt) {
+//			//findPathOpt(args.length-1);
+//		}
+		
+		
+		Stack = false;
+		Queue = true;
 		Opt = false;
 		Time = false;
-		Outcoordinate = false;
+		Incoordinate = true;
+		Outcoordinate = true;
 		Help = false;
-		
-		//findPathQ("TestCoordinateInput2");
-		//runCommands("TestCoordinateInput2");
+		runCommands("TestCoordinateInput2");
+		System.out.println();
+		Outcoordinate = false;
+		runCommands("TestCoordinateInput2");
 	}
 }
