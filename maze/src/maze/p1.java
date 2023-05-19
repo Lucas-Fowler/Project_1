@@ -95,7 +95,8 @@ public class p1 {
 	    	//reading the next line in the file
 	    	data = myReader.nextLine(); //sets to the first line of the actual maze
 	    	for (int c = 0; c < cols; c++) {
-	    		arr[r][c] = new Position(data.substring(c, c+1), r, c); 
+	    		Position p = new Position(data.substring(c, c+1), r, c);
+	    		arr[r][c] = p; 
 	    	}
 	    	if (myReader.hasNextLine()) {
   			r++; //increments the rows of s
@@ -103,7 +104,7 @@ public class p1 {
 	    }
 		
 		ArrayList<Position[][]> mazes = new ArrayList<Position[][]>();  //arraylist of every maze in the text file
-		
+		System.out.println();
 		int startRow = 0;
 		for (int i = 0; i < numMazes; i++) {   //adding each maze to "mazes"
 			Position[][] temp = new Position[arr.length/numMazes][arr[0].length];
@@ -136,8 +137,10 @@ public class p1 {
 	}	
 	
 		
-	
-	
+	//checks for illegal characters
+	public static boolean isLegal(Position p) {
+		return p.getSymbol().equals(".") || p.getSymbol().equals("@") || p.getSymbol().equals("$") || p.getSymbol().equals("|");
+	}
 	//tests if position is valid for Queue
 	//tests if position object is an open path/open walkway/Diamond Wolverine buck, and can get to this position from the W
 	public static boolean isSafeQ(int row, int col, Position[][] arr, Queue<Position> mainQ, Queue<Position> visited) {  
@@ -385,18 +388,42 @@ public class p1 {
 		}
 	}
 	
+	public static void navigateWithOpt(String file) {
+		
+	}
+	
+	public static void findPathOpt(String file) {
+		
+	}
 	
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
+		Incoordinate = false;
+//		for (int i = 0; i < args.length-1; i++) {
+//			switch (args[i]) {
+//				case "--Stack": 
+//					findPathS(args[args.length-1]);
+//					break;
+//				case "--Queue":
+//					findPathQ(args[args.length-1]);
+//					break;
+//				case "--Opt": 
+//					findPathOpt(args[args.length-1]);
+//					break; 
+//				case "--Incoordinate":
+//					Incoordinate = true;
+//					break;
+//			}
+//		}
+		findPathS("Test3");
 		Stack = true;
 		Queue = false;
 		Opt = false;
 		Time = false;
-		Incoordinate = true;
 		Outcoordinate = false;
 		Help = false;
 		
 		//findPathQ("TestCoordinateInput2");
-		runCommands("TestCoordinateInput2");
+		//runCommands("TestCoordinateInput2");
 	}
 }
