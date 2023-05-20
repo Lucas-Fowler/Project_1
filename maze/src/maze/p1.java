@@ -1,7 +1,5 @@
 package maze;
 import java.io.File;
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 import java.util.Stack;
@@ -9,17 +7,18 @@ import java.util.ArrayDeque;
 import java.util.Queue;
 import java.util.Arrays;
 import java.util.ArrayList;
-import Exceptions.IllegalCharacterException;
 
 public class p1 {
 	
-	public static boolean Stack;
-	public static boolean Queue;
-	public static boolean Opt;
-	public static boolean Time;
-	public static boolean Incoordinate;
-	public static boolean Outcoordinate;
-	public static boolean Help;
+	public static double runTime = 0;
+		
+	public static boolean Stack = false;
+	public static boolean Queue = false;
+	public static boolean Opt = false;
+	public static boolean Time = false;
+	public static boolean Incoordinate = false;
+	public static boolean Outcoordinate = false;
+	public static boolean Help = false;
 	
 	
 	//returns the position of W
@@ -54,7 +53,7 @@ public class p1 {
 	
 	//3 METHODS FOR SCANNING A TEXT FILE
 	//This method scans a coordinate-based text file and returns an ArrayList<Position>  
-	public static ArrayList<Position[][]> inputCoordinate(String str) throws IllegalCharacterException {
+	public static ArrayList<Position[][]> inputCoordinate(String str) throws IllegalMapCharacterException, IncorrectMapFormatException {
 		try {
 			File f = new File(str);
 			Scanner myReader = new Scanner(f);
@@ -63,6 +62,10 @@ public class p1 {
 			int numMazes = Integer.parseInt(mazeInfo[2]); //number of mazes
 			int rows = Integer.parseInt(mazeInfo[0]); //number of rows
 			int cols = Integer.parseInt(mazeInfo[1]); //number of columns
+			
+			if (rows < 1 || cols < 1 || numMazes < 1) {
+				throw new IncorrectMapFormatException("Map format is not correct");
+			}
 			
 			ArrayList<Position[][]> mazes = new ArrayList<Position[][]>();  //arraylist of every maze in the text file
 			
@@ -81,6 +84,9 @@ public class p1 {
 					int R = Integer.parseInt(coordinateInfo[1]); 
 					int C = Integer.parseInt(coordinateInfo[2]);
 					temp[R][C] = new Position(coordinateInfo[0], R, C, mazeNum);
+					if (!isLegal(temp[R][C])) {
+		    			throw new IllegalMapCharacterException("TextMap has illegal character");
+		    		}
 					//System.out.println(temp[R][C]);
 					//System.out.println(maze);
 					//System.out.println();
@@ -95,8 +101,9 @@ public class p1 {
 		}    
 		return null;
 	}
+	
 	//This method scans a text-map-based text file and returns an ArrayList<Position>
-	public static ArrayList<Position[][]> inputTextMap(String str) throws IllegalCharacterException {
+	public static ArrayList<Position[][]> inputTextMap(String str) throws IllegalMapCharacterException, IncorrectMapFormatException {
 		try {
 			File f = new File(str);
 			Scanner myReader = new Scanner(f);     //test different mazes here
@@ -105,6 +112,10 @@ public class p1 {
 			int numMazes = Integer.parseInt(mazeInfo[2]); //number of mazes
 			int rows = Integer.parseInt(mazeInfo[0]) * numMazes; //number of rows
 			int cols = Integer.parseInt(mazeInfo[1]); //number of columns		
+			
+			if (rows < 1 || cols < 1 || numMazes < 1) {
+				throw new IncorrectMapFormatException("Map format is not correct");
+			}
 			
 			Position[][] arr = new Position[rows][cols]; //2D array of all positions in the text map
 			
@@ -116,7 +127,7 @@ public class p1 {
 		    		Position p = new Position(data.substring(c, c+1), r, c, 0);
 		    		arr[r][c] = p; 
 		    		if (!isLegal(arr[r][c])) {
-		    			throw new IllegalCharacterException("TextMap has illegal character");
+		    			throw new IllegalMapCharacterException("TextMap has illegal character");
 		    		}
 		    	}
 		    	if (myReader.hasNextLine()) {
@@ -147,13 +158,29 @@ public class p1 {
 		return null;
 	}
 	//scans text file (can be either coordinate-based format or text-map format) and returns 2D array
-	public static ArrayList<Position[][]> scanToMazes(String str) throws Exception {
+	public static ArrayList<Position[][]> scanToMazes(String str) throws Exception, IllegalMapCharacterException {
 		if (Incoordinate) {
 			return inputCoordinate(str);
 		} 
 		return inputTextMap(str);	
 	}	
 	
+	//checks if the file format is the same as the input format
+	//ex: file format = map, input format = coordinate --> file format != input format
+	public static void isFileEqualToInputFormat(String str) throws IllegalCommandLineInputsException {
+		try {
+			File f = new File(str);
+			Scanner myReader = new Scanner(f);
+			String data = myReader.nextLine();
+			data = myReader.nextLine();
+			if ((data.substring(1, 2).equals(" ") && !Incoordinate) || (!data.substring(1, 2).equals(" ") && Incoordinate)) { // every text file in the coordinate format has lines with the format: (char (length 1) + " " + rows + " " + cols + " " + numMaze) 
+				throw new IllegalCommandLineInputsException("file format is not the same as input format");
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			System.out.println("File not found");
+		}
+	}
 		
 	//checks for illegal characters
 	public static boolean isLegal(Position p) {
@@ -243,21 +270,31 @@ public class p1 {
 	
 	
 	//prints input file, runs method that creates a path in the maze, finds runtime of stack-based approach (if Time switch is set to true), and prints output  
-	public static void findPathS(String str) throws Exception {
+	public static void findPathS(String str) throws IllegalMapCharacterException, Exception {
 		ArrayList<Position[][]> mazes = scanToMazes(str); //arraylist of every maze in the text file
 		int numMazes = getNumMazes(str);
 		for (int i = 0; i < numMazes; i++) {
 			Position[][] temp = mazes.get(i);
 			navigateWithStack(temp);
 		}
+		System.out.println();
+		if (Time) {
+			runTime /= 1000000000;
+			System.out.println(runTime);
+		}
 	}
 	//prints input file, runs method that creates a path in the maze, finds runtime of stack-based approach (if Time switch is set to true), and prints output
-	public static void findPathQ(String str) throws Exception {
+	public static void findPathQ(String str) throws IllegalMapCharacterException, Exception {
 		ArrayList<Position[][]> mazes = scanToMazes(str); //arraylist of every maze in the text file
 		int numMazes = getNumMazes(str);
 		for (int i = 0; i < numMazes; i++) {
 			Position[][] temp = mazes.get(i);
 			navigateWithQueue(temp);
+		}
+		System.out.println();
+		if (Time) {
+			runTime /= 1000000000;
+			System.out.println(runTime);
 		}
 	}
 	
@@ -265,6 +302,7 @@ public class p1 {
 	
 	//stack-based approach that we are finding runtime for
 	public static void navigateWithStack(Position[][] arr) { 
+		long startTime = System.nanoTime();
 		Stack<Position> mainS = new Stack<Position>();
 		Stack<Position> visited = new Stack<Position>();
 		Position w = findW(arr);  //finding position of W
@@ -301,6 +339,11 @@ public class p1 {
 			}
 		}
 		
+		//calculating run time
+		long endTime = System.nanoTime() - startTime;
+		runTime += endTime;
+		
+		//output format
 		if (Outcoordinate) {
 			for (int i = coordinates.size()-1; i >= 0; i--) { 
 				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
@@ -312,6 +355,7 @@ public class p1 {
 	
 	//Queue-based approach that we are finding runtime for
 	public static void navigateWithQueue(Position[][] arr) {
+		long startTime = System.nanoTime();
 		Queue<Position> mainQ = new ArrayDeque<Position>();
 		Queue<Position> visited = new ArrayDeque<Position>();
 		Position w = findW(arr);  //finding position of W
@@ -351,6 +395,12 @@ public class p1 {
 				nextElement = visited.remove();
 			}
 		}
+		
+		//calculating run time of current run of the method and adding it to total runtime
+		long endTime = System.nanoTime() - startTime;
+		runTime += endTime;		
+		
+		//output format
 		if (Outcoordinate) {
 			//coordinates are added to ArrayList "coordinates" in reverse order
 			for (int i = coordinates.size()-1; i >= 0; i--) { 
@@ -360,14 +410,10 @@ public class p1 {
 			//2D Map output format
 			print2DArray(arr);
 		}
-		
-		
 	}
 	
 	
-	
-	
-	public static void runCommands(String file) throws Exception {
+	public static void runCommands(String file) throws Exception, IllegalMapCharacterException {
 		int count = 0; 
 		if (Stack) {
 			count++;
@@ -414,69 +460,67 @@ public class p1 {
 		
 	}
 	
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) throws Exception, IllegalMapCharacterException, IllegalCommandLineInputsException {
 		// TODO Auto-generated method stub
-//		for (int i = 0; i < args.length-1; i++) {
-//			switch (args[i]) {
-//				case "--Stack": 
-//					Stack = true;
-//					break;
-//				case "--Queue":
-//					Queue = true;
-//					break;
-//				case "--Opt":
-//					Opt = true;
-//					break;
-//				case "--Incoordinate": 
-//					Incoordinate = true;
-//					break;
-//				case "--Outcoordinate":
-//					Outcoordinate = true;
-//					break;
-//				case "--Time": 
-//					Time = true;
-//					break; 
-//				default: 
-//					System.out.println("No command line arguments found");
-//					break;
-//			}
-//		}
-//		int count = 0; 
-//		if (Stack) {
-//			count++;
-//		}
-//		if (Queue) {
-//			count++;
-//		}
-//		if (Opt) {
-//			count++;
-//		}
-//		if (count > 1) { //testing to see if none or more than one option is specified
-//			System.out.println("Can't test more than one routing approach");
-//			System.exit(-1);
-//		} else if (count == 0) {
-//			System.out.println("No routing approach was selected");
-//			System.exit(-1);
-//		}
-//		if (Stack) {
-//			findPathS(args[args.length-1]);
-//		} else if (Queue) {
-//			findPathQ(args[args.length-1]);
-//		} else if (Opt) {
-//			//findPathOpt(args.length-1);
-//		}
+		for (int i = 0; i < args.length-1; i++) {
+			switch (args[i]) {
+				case "--Stack": 
+					Stack = true;
+					break;
+				case "--Queue":
+					Queue = true;
+					break;
+				case "--Opt":
+					Opt = true;
+					break;
+				case "--Incoordinate": 
+					Incoordinate = true;
+					break;
+				case "--Outcoordinate":
+					Outcoordinate = true;
+					break;
+				case "--Time": 
+					Time = true;
+					break; 
+				default: 
+					throw new IllegalCommandLineInputsException("illegal command line input");
+			}
+		}
+		isFileEqualToInputFormat(args[args.length-1]);
+		int count = 0; 
+		if (Stack) {
+			count++;
+		}
+		if (Queue) {
+			count++;
+		}
+		if (Opt) {
+			count++;
+		}
+		if (count > 1) { //testing to see if none or more than one option is specified
+			throw new IllegalCommandLineInputsException("Can't test more than one routing approach");
+		} else if (count == 0) {
+			throw new IllegalCommandLineInputsException("No routing approach was selected");
+		}
+		if (Stack) {
+			findPathS(args[args.length-1]);
+		} else if (Queue) {
+			findPathQ(args[args.length-1]);
+		} else if (Opt) {
+			//findPathOpt(args.length-1);
+		}
 		
 		
-		Stack = false;
-		Queue = true;
-		Opt = false;
-		Time = false;
-		Incoordinate = true;
-		Outcoordinate = true;
-		Help = false;
-		runCommands("TestCoordinateInput2");
-		System.out.println();
-		Outcoordinate = false;
-		runCommands("TestCoordinateInput2");
+//		Stack = true;
+//		Queue = false;
+//		Opt = false;
+//		Time = true;
+//		Incoordinate = true;
+//		Outcoordinate = true;
+//		Help = false;
+//		runCommands("TestCoordinateInput2");
+//		System.out.println();
+//		Outcoordinate = false;
+//		runCommands("TestCoordinateInput2");
 	}
 }
