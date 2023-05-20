@@ -10,6 +10,8 @@ import java.util.ArrayList;
 
 public class p1 {
 	
+	public static boolean solutionExists = false;
+	
 	public static double runTime = 0;
 		
 	public static boolean Stack = false;
@@ -136,7 +138,7 @@ public class p1 {
 		    }
 			
 			ArrayList<Position[][]> mazes = new ArrayList<Position[][]>();  //arraylist of every maze in the text file
-			System.out.println();
+			
 			int mazeNum = 0;
 			int startRow = 0;
 			for (int i = 0; i < numMazes; i++) {   //adding each maze to "mazes"
@@ -237,6 +239,168 @@ public class p1 {
 	}
 	
 	
+	
+	
+	
+	
+	//prints input file, runs method that creates a path in the maze, finds runtime of stack-based approach (if Time switch is set to true), and prints output  
+	public static void findPathS(String str) throws IllegalMapCharacterException, Exception {
+		ArrayList<Position[][]> mazes = scanToMazes(str); //arraylist of every maze in the text file
+		int numMazes = getNumMazes(str);
+		for (int i = 0; i < numMazes; i++) {
+			Position[][] temp = mazes.get(i);
+			navigateWithStack(temp);
+		}
+		if (!solutionExists) {
+			System.out.println("The Wolverine Store is closed.");
+		}
+		System.out.println();
+		if (Time) {
+			runTime /= 1000000000;
+			System.out.println("Total Runtime: " + runTime + " seconds");
+		}
+	}
+	//prints input file, runs method that creates a path in the maze, finds runtime of stack-based approach (if Time switch is set to true), and prints output
+	public static void findPathQ(String str) throws IllegalMapCharacterException, Exception {
+		ArrayList<Position[][]> mazes = scanToMazes(str); //arraylist of every maze in the text file
+		int numMazes = getNumMazes(str);
+		for (int i = 0; i < numMazes; i++) {
+			Position[][] temp = mazes.get(i);
+			navigateWithQueue(temp);
+		}
+		if (!solutionExists) {
+			System.out.println("The Wolverine Store is closed.");
+		}
+		System.out.println();
+		if (Time) {
+			runTime /= 1000000000;
+			System.out.println("Total Runtime: " + runTime + " seconds");
+		}
+	}
+	
+	
+	
+	//stack-based approach that we are finding runtime for
+	public static void navigateWithStack(Position[][] arr) { 
+		long startTime = System.nanoTime();
+		Stack<Position> mainS = new Stack<Position>();
+		Stack<Position> visited = new Stack<Position>();
+		Position w = findW(arr);  //finding position of W
+		int currRow = w.getRow();
+		int currCol = w.getCol();
+		mainS.push(w);
+		int[] r = {-1, 1, 0, 0}; //north south east west
+		int[] c = {0, 0, 1, -1};
+		while (!arr[currRow][currCol].getSymbol().equals("$") && !arr[currRow][currCol].getSymbol().equals("|")) {
+			currRow = peekFirstStack(mainS).getRow();
+			currCol = peekFirstStack(mainS).getCol();
+			for (int i = 0; i < 4; i++) {
+				if (isSafeS(currRow+r[i], currCol+c[i], arr, mainS, visited)) { //checking if surrounding elements are valid
+					mainS.push(arr[currRow+r[i]][currCol+c[i]]); //adding them to the mainS
+				}
+			}
+			visited.add(removeFromStack(mainS)); //removing from the beginning of mainQ and adding to visited
+		}
+		//checking if there is a path to get to the $ and updates boolean variable "solutionExists" if a solution does exist
+		stackContains$(visited);
+		
+		removeFromStack(visited);  //removing the W because we aren't changing the symbol to a "+"
+		
+		ArrayList<Position> coordinates = new ArrayList<Position>();
+		
+		int len = visited.size(); //variable for visited.size() because visited.size() changes when elements are removed
+		Position element = visited.pop(); //first element in the queue visited
+		Position nextElement = visited.peek();  //2nd element
+		for (int i = 0; i < len; i++) {
+			if (isNeighbor(element, nextElement)) {
+				arr[nextElement.getRow()][nextElement.getCol()].setSymbol("+");
+				coordinates.add(arr[nextElement.getRow()][nextElement.getCol()]);
+				element = nextElement;
+			}
+			if (i < len - 1) {  //this if statement is to avoid runtime errors
+				nextElement = visited.pop();
+			}
+		}
+		
+		//calculating run time
+		long endTime = System.nanoTime() - startTime;
+		runTime += endTime;
+		
+		//output format
+		if (solutionExists && Outcoordinate) {
+			for (int i = coordinates.size()-1; i >= 0; i--) { 
+				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
+			}
+		} else {
+			if (solutionExists) {
+				print2DArray(arr);
+			}
+		}
+	}
+	
+	//Queue-based approach that we are finding runtime for
+	public static void navigateWithQueue(Position[][] arr) {
+		long startTime = System.nanoTime();
+		Queue<Position> mainQ = new ArrayDeque<Position>();
+		Queue<Position> visited = new ArrayDeque<Position>();
+		Position w = findW(arr);  //finding position of W
+		int currRow = w.getRow();
+		int currCol = w.getCol();
+		mainQ.add(w);  //adding w into mainQ
+		
+		int[] r = {-1, 1, 0, 0}; //north south east west
+		int[] c = {0, 0, 1, -1};
+		while (!arr[currRow][currCol].getSymbol().equals("$") && !arr[currRow][currCol].getSymbol().equals("|") && !mainQ.isEmpty()) {
+			currRow = mainQ.element().getRow();
+			currCol = mainQ.element().getCol();
+			for (int i = 0; i < 4; i++) {
+				if (isSafeQ(currRow+r[i], currCol+c[i], arr, mainQ, visited)) { //checking if surrounding elements are valid
+					mainQ.add(arr[currRow+r[i]][currCol+c[i]]); //adding them to the mainQ
+				}
+			}
+			visited.add(mainQ.remove()); //removing from the beginning of mainQ and adding to visited
+		}
+		
+		//checking if there is a path to get to the $ and updates boolean variable "solutionExists" if a solution does exist
+		queueContains$(visited);
+		
+		visited.remove();  //removing the W because we aren't changing the symbol to a "+"
+		
+		visited = reverseQueue(visited); //reverse the Queue so you can backtrack from the $ to the W
+		
+		ArrayList<Position> coordinates = new ArrayList<Position>();
+		
+		int len = visited.size(); //variable for visited.size() because visited.size() changes when elements are removed
+		Position element = visited.remove(); //first element in the queue visited
+		Position nextElement = visited.element();  //2nd element
+		for (int i = 0; i < len; i++) {
+			if (isNeighbor(element, nextElement)) {
+				arr[nextElement.getRow()][nextElement.getCol()].setSymbol("+");
+				coordinates.add(arr[nextElement.getRow()][nextElement.getCol()]);
+				element = nextElement;
+			}
+			if (i < len - 1) {  //this if statement is to avoid runtime errors
+				nextElement = visited.remove();
+			}
+		}
+		
+		//calculating run time of current run of the method and adding it to total runtime
+		long endTime = System.nanoTime() - startTime;
+		runTime += endTime;		
+		
+		//output format
+		if (solutionExists && Outcoordinate) {
+			for (int i = coordinates.size()-1; i >= 0; i--) { 
+				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
+			}
+		} else {
+			if (solutionExists) {
+				print2DArray(arr);
+			}
+		}		
+	}
+	
+	
 	//next 2 methods are for Stacks
 	//peek (first element) method for stack
 	public static Position peekFirstStack(Stack<Position> s) {
@@ -266,177 +430,70 @@ public class p1 {
 		}
 		return pop;
 	}
-	
-	
-	
-	//prints input file, runs method that creates a path in the maze, finds runtime of stack-based approach (if Time switch is set to true), and prints output  
-	public static void findPathS(String str) throws IllegalMapCharacterException, Exception {
-		ArrayList<Position[][]> mazes = scanToMazes(str); //arraylist of every maze in the text file
-		int numMazes = getNumMazes(str);
-		for (int i = 0; i < numMazes; i++) {
-			Position[][] temp = mazes.get(i);
-			navigateWithStack(temp);
+	//next 2 methods are for Queues
+	//popMethod (remove last) for Queue
+	public static Position queuePop(Queue<Position> q) {
+		Queue<Position> popQ = new ArrayDeque<Position>();
+		int len = q.size();
+		for (int i = 0; i < len - 1; i++) {
+			popQ.add(q.remove());
 		}
-		System.out.println();
-		if (Time) {
-			runTime /= 1000000000;
-			System.out.println(runTime);
-		}
-	}
-	//prints input file, runs method that creates a path in the maze, finds runtime of stack-based approach (if Time switch is set to true), and prints output
-	public static void findPathQ(String str) throws IllegalMapCharacterException, Exception {
-		ArrayList<Position[][]> mazes = scanToMazes(str); //arraylist of every maze in the text file
-		int numMazes = getNumMazes(str);
-		for (int i = 0; i < numMazes; i++) {
-			Position[][] temp = mazes.get(i);
-			navigateWithQueue(temp);
-		}
-		System.out.println();
-		if (Time) {
-			runTime /= 1000000000;
-			System.out.println(runTime);
-		}
-	}
-	
-	
-	
-	//stack-based approach that we are finding runtime for
-	public static void navigateWithStack(Position[][] arr) { 
-		long startTime = System.nanoTime();
-		Stack<Position> mainS = new Stack<Position>();
-		Stack<Position> visited = new Stack<Position>();
-		Position w = findW(arr);  //finding position of W
-		int currRow = w.getRow();
-		int currCol = w.getCol();
-		mainS.push(w);
-		int[] r = {-1, 1, 0, 0}; //north south east west
-		int[] c = {0, 0, 1, -1};
-		while (!arr[currRow][currCol].getSymbol().equals("$") && !arr[currRow][currCol].getSymbol().equals("|")) {
-			currRow = peekFirstStack(mainS).getRow();
-			currCol = peekFirstStack(mainS).getCol();
-			for (int i = 0; i < 4; i++) {
-				if (isSafeS(currRow+r[i], currCol+c[i], arr, mainS, visited)) { //checking if surrounding elements are valid
-					mainS.push(arr[currRow+r[i]][currCol+c[i]]); //adding them to the mainS
-				}
-			}
-			visited.add(removeFromStack(mainS)); //removing from the beginning of mainQ and adding to visited
-		}
-		removeFromStack(visited);  //removing the W because we aren't changing the symbol to a "+"
-		
-		ArrayList<Position> coordinates = new ArrayList<Position>();
-		
-		int len = visited.size(); //variable for visited.size() because visited.size() changes when elements are removed
-		Position element = visited.pop(); //first element in the queue visited
-		Position nextElement = visited.peek();  //2nd element
+		Position p = q.remove();
+		len = popQ.size();
 		for (int i = 0; i < len; i++) {
-			if (isNeighbor(element, nextElement)) {
-				arr[nextElement.getRow()][nextElement.getCol()].setSymbol("+");
-				coordinates.add(arr[nextElement.getRow()][nextElement.getCol()]);
-				element = nextElement;
-			}
-			if (i < len - 1) {  //this if statement is to avoid runtime errors
-				nextElement = visited.pop();
-			}
+			q.add(popQ.remove());
 		}
-		
-		//calculating run time
-		long endTime = System.nanoTime() - startTime;
-		runTime += endTime;
-		
-		//output format
-		if (Outcoordinate) {
-			for (int i = coordinates.size()-1; i >= 0; i--) { 
-				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
-			}
-		} else {
-			print2DArray(arr);
-		}
+		return p;
 	}
-	
-	//Queue-based approach that we are finding runtime for
-	public static void navigateWithQueue(Position[][] arr) {
-		long startTime = System.nanoTime();
-		Queue<Position> mainQ = new ArrayDeque<Position>();
-		Queue<Position> visited = new ArrayDeque<Position>();
-		Position w = findW(arr);  //finding position of W
-		int currRow = w.getRow();
-		int currCol = w.getCol();
-		mainQ.add(w);  //adding w into mainQ
-		
-		int[] r = {-1, 1, 0, 0}; //north south east west
-		int[] c = {0, 0, 1, -1};
-		while (!arr[currRow][currCol].getSymbol().equals("$") && !arr[currRow][currCol].getSymbol().equals("|")) {
-			currRow = mainQ.element().getRow();
-			currCol = mainQ.element().getCol();
-			for (int i = 0; i < 4; i++) {
-				if (isSafeQ(currRow+r[i], currCol+c[i], arr, mainQ, visited)) { //checking if surrounding elements are valid
-					mainQ.add(arr[currRow+r[i]][currCol+c[i]]); //adding them to the mainQ
-				}
-			}
-			visited.add(mainQ.remove()); //removing from the beginning of mainQ and adding to visited
+	//peek (last element) for queues
+	public static Position queuePeek(Queue<Position> q) {
+		Queue<Position> popQ = new ArrayDeque<Position>();
+		int len = q.size();
+		for (int i = 0; i < len - 1; i++) {
+			popQ.add(q.remove());
 		}
-		
-		visited.remove();  //removing the W because we aren't changing the symbol to a "+"
-		
-		visited = reverseQueue(visited); //reverse the Queue so you can backtrack from the $ to the W
-		
-		ArrayList<Position> coordinates = new ArrayList<Position>();
-		
-		int len = visited.size(); //variable for visited.size() because visited.size() changes when elements are removed
-		Position element = visited.remove(); //first element in the queue visited
-		Position nextElement = visited.element();  //2nd element
+		Position p = q.peek();
+		popQ.add(q.remove());
+		len = popQ.size();
 		for (int i = 0; i < len; i++) {
-			if (isNeighbor(element, nextElement)) {
-				arr[nextElement.getRow()][nextElement.getCol()].setSymbol("+");
-				coordinates.add(arr[nextElement.getRow()][nextElement.getCol()]);
-				element = nextElement;
-			}
-			if (i < len - 1) {  //this if statement is to avoid runtime errors
-				nextElement = visited.remove();
-			}
+			q.add(popQ.remove());
 		}
-		
-		//calculating run time of current run of the method and adding it to total runtime
-		long endTime = System.nanoTime() - startTime;
-		runTime += endTime;		
-		
-		//output format
-		if (Outcoordinate) {
-			//coordinates are added to ArrayList "coordinates" in reverse order
-			for (int i = coordinates.size()-1; i >= 0; i--) { 
-				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
-			}
-		} else {
-			//2D Map output format
-			print2DArray(arr);
-		}
+		return p;
 	}
 	
 	
-	public static void runCommands(String file) throws Exception, IllegalMapCharacterException {
-		int count = 0; 
-		if (Stack) {
-			count++;
+	//Checks if visited stack has a $ THIS WORKS
+	public static void stackContains$(Stack<Position> s) {
+		Stack<Position> popStack = new Stack<Position>();
+		int len = s.size();
+		for (int i = 0; i < len; i++) {
+			Position p = s.peek();
+			if (!p.getSymbol().equals("$")) {
+				popStack.push(s.pop());	
+			} else {
+				solutionExists = true;
+			}
 		}
-		if (Queue) {
-			count++;
+		int popLen = popStack.size();
+		for (int i = 0; i < popLen; i++) {
+			s.push(popStack.pop());
 		}
-		if (Opt) {
-			count++;
+	}
+	//checks if visited q has a $
+	public static void queueContains$(Queue<Position> s) {
+		Queue<Position> popQ = new ArrayDeque<Position>();
+		int len = s.size();
+		for (int i = 0; i < len; i++) {
+			Position p = queuePeek(s);
+			if (!p.getSymbol().equals("$")) {
+				popQ.add(queuePop(s));	
+			} else {
+				solutionExists = true;
+			}
 		}
-		if (count > 1) { //testing to see if none or more than one option is specified
-			System.out.println("Can't test more than one routing approach");
-			System.exit(-1);
-		} else if (count == 0) {
-			System.out.println("No routing approach was selected");
-			System.exit(-1);
-		}
-		if (Stack) {
-			findPathS(file);
-		} else if (Queue) {
-			findPathQ(file);
-		} else if (Opt) {
-			//findPathOpt(file);
+		int popLen = popQ.size();
+		for (int i = 0; i < popLen; i++) {
+			s.add(queuePop(popQ));
 		}
 	}
 	
