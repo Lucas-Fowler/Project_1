@@ -497,11 +497,13 @@ public class p1 {
 		if (Opt) {
 			count++;
 		}
+		
 		if (count > 1) { //testing to see if none or more than one option is specified
 			throw new IllegalCommandLineInputsException("Can't test more than one routing approach");
 		} else if (count == 0) {
 			throw new IllegalCommandLineInputsException("No routing approach was selected");
 		}
+		
 		if (Stack) {
 			findPathS(args[args.length-1]);
 		} else if (Queue) {
@@ -510,17 +512,5 @@ public class p1 {
 			//findPathOpt(args.length-1);
 		}
 		
-		
-//		Stack = true;
-//		Queue = false;
-//		Opt = false;
-//		Time = true;
-//		Incoordinate = true;
-//		Outcoordinate = true;
-//		Help = false;
-//		runCommands("TestCoordinateInput2");
-//		System.out.println();
-//		Outcoordinate = false;
-//		runCommands("TestCoordinateInput2");
 	}
 }
