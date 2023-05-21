@@ -188,6 +188,17 @@ public class p1 {
 	public static boolean isLegal(Position p) {
 		return p.getSymbol().equals("W") || p.getSymbol().equals(".") || p.getSymbol().equals("@") || p.getSymbol().equals("$") || p.getSymbol().equals("|");
 	}
+	
+	//tests if position is valid for Stack
+	//tests if position object is an open path/open walkway/Diamond Wolverine buck, and can get to this position from the W
+	public static boolean isSafeS(int row, int col, Position[][] arr, Stack<Position> mainS, Stack<Position> visited) {  
+		if (visited.isEmpty()) { //can't check if visited.contains(element) when there is nothing in visited until after the first iteration
+			return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|")) 
+					&& !mainS.contains(arr[row][col])); 
+		}
+		return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|"))
+				&& !mainS.contains(arr[row][col]) && !visited.contains(arr[row][col]));
+	}	
 	//tests if position is valid for Queue
 	//tests if position object is an open path/open walkway/Diamond Wolverine buck, and can get to this position from the W
 	public static boolean isSafeQ(int row, int col, Position[][] arr, Queue<Position> mainQ, Queue<Position> visited) {  
@@ -198,16 +209,17 @@ public class p1 {
 		return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|"))
 				&& !mainQ.contains(arr[row][col]) && !visited.contains(arr[row][col]));
 	}
-	//tests if position is valid for Stack
+	//tests if position is valid for mainQ and ArrayList of Positions
 	//tests if position object is an open path/open walkway/Diamond Wolverine buck, and can get to this position from the W
-	public static boolean isSafeS(int row, int col, Position[][] arr, Stack<Position> mainS, Stack<Position> visited) {  
-		if (visited.isEmpty()) { //can't check if visited.contains(element) when there is nothing in visited until after the first iteration
+	public static boolean isSafeList(int row, int col, Position[][] arr, Queue<Position> mainQ, ArrayList<Position> visited) {
+		if (visited.isEmpty()) {
 			return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|")) 
-					&& !mainS.contains(arr[row][col])); 
+					&& !mainQ.contains(arr[row][col]));
 		}
-		return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|"))
-				&& !mainS.contains(arr[row][col]) && !visited.contains(arr[row][col]));
+		return (row >= 0 && row < arr.length && col >= 0 && col < arr[0].length && (arr[row][col].getSymbol().equals(".") || arr[row][col].getSymbol().equals("$") || arr[row][col].getSymbol().equals("|")) 
+				&& !mainQ.contains(arr[row][col]) && !visited.contains(arr[row][col]));
 	}
+	
 	
 	
 	public static boolean isNeighbor(Position a, Position b) { //returns true if an adjacent pair of elements are directly above/below/left/right 
@@ -278,6 +290,23 @@ public class p1 {
 		}
 	}
 	
+	public static void findPathOpt(String file) throws Exception, IllegalMapCharacterException {
+		ArrayList<Position[][]> mazes = scanToMazes(file);
+		int numMazes = getNumMazes(file);
+		for (int i = 0; i < numMazes; i++) {
+			Position[][] temp = mazes.get(i);
+			navigateWithOpt(temp);
+		}
+		if (!solutionExists) {
+			System.out.println("The Wolverine Store is closed.");
+		}
+		System.out.println();
+		if (Time) {
+			runTime /= 1000000000;
+			System.out.println("Total Runtime: " + runTime + " seconds");
+		}
+	}
+	
 	
 	
 	//stack-based approach that we are finding runtime for
@@ -291,7 +320,7 @@ public class p1 {
 		mainS.push(w);
 		int[] r = {-1, 1, 0, 0}; //north south east west
 		int[] c = {0, 0, 1, -1};
-		while (!arr[currRow][currCol].getSymbol().equals("$") && !arr[currRow][currCol].getSymbol().equals("|")) {
+		while (!arr[currRow][currCol].getSymbol().equals("$") && !arr[currRow][currCol].getSymbol().equals("|") && !mainS.isEmpty()) {
 			currRow = peekFirstStack(mainS).getRow();
 			currCol = peekFirstStack(mainS).getCol();
 			for (int i = 0; i < 4; i++) {
@@ -400,6 +429,64 @@ public class p1 {
 		}		
 	}
 	
+	public static void navigateWithOpt(Position[][] arr) {
+		long startTime = System.nanoTime();
+		Queue<Position> mainQ = new ArrayDeque<Position>();
+		ArrayList<Position> visited = new ArrayList<Position>();
+		Position w = findW(arr);  //finding position of W
+		int currRow = w.getRow();
+		int currCol = w.getCol();
+		mainQ.add(w);  //adding w into mainQ
+		
+		int[] r = {-1, 1, 0, 0}; //north south east west
+		int[] c = {0, 0, 1, -1};
+		while (!arr[currRow][currCol].getSymbol().equals("$") && !arr[currRow][currCol].getSymbol().equals("|") && !mainQ.isEmpty()) {
+			currRow = mainQ.element().getRow();
+			currCol = mainQ.element().getCol();
+			for (int i = 0; i < 4; i++) {
+				if (isSafeList(currRow+r[i], currCol+c[i], arr, mainQ, visited)) { //checking if surrounding elements are valid
+					mainQ.add(arr[currRow+r[i]][currCol+c[i]]); //adding them to the mainQ
+				}
+			}
+			visited.add(mainQ.remove()); //removing from the beginning of mainQ and adding to visited
+		}
+		
+		arrContains$(visited);
+		visited.remove(0);
+		
+		ArrayList<Position> coordinates = new ArrayList<Position>();
+		
+		int len = visited.size(); //variable for visited.size() because visited.size() changes when elements are removed
+		Position element = visited.remove(visited.size()-1); //first element in the queue visited
+		Position nextElement = visited.get(visited.size()-1);  //2nd element
+		for (int i = 0; i < len; i++) {
+			if (isNeighbor(element, nextElement)) {
+				arr[nextElement.getRow()][nextElement.getCol()].setSymbol("+");
+				coordinates.add(arr[nextElement.getRow()][nextElement.getCol()]);
+				element = nextElement;
+			}
+			if (i < len - 1) {  //this if statement is to avoid runtime errors
+				nextElement = visited.remove(visited.size()-1);
+			}
+		}
+		
+		//calculating run time
+		long endTime = System.nanoTime() - startTime;
+		runTime += endTime;
+		
+		//output format
+		if (solutionExists && Outcoordinate) {
+			for (int i = coordinates.size()-1; i >= 0; i--) { 
+				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
+			}
+		} else {
+			if (solutionExists) {
+				print2DArray(arr);
+			}
+		}
+		
+		
+	}
 	
 	//next 2 methods are for Stacks
 	//peek (first element) method for stack
@@ -496,6 +583,14 @@ public class p1 {
 			s.add(queuePop(popQ));
 		}
 	}
+	//checks if visited arraylist has a $
+	public static void arrContains$(ArrayList<Position> arr) {
+		for (int i = 0; i < arr.size(); i++) {
+			if (arr.get(i).getSymbol().equals("$")) {
+				solutionExists = true;
+			}
+		}
+	}
 	
 	
 	//used for testing purposes
@@ -509,13 +604,7 @@ public class p1 {
 		}
 	}
 	
-	public static void navigateWithOpt(String file) {
-		
-	}
 	
-	public static void findPathOpt(String file) {
-		
-	}
 	
 	public static void main(String[] args) throws Exception, IllegalMapCharacterException, IllegalCommandLineInputsException {
 		// TODO Auto-generated method stub
@@ -566,7 +655,7 @@ public class p1 {
 		} else if (Queue) {
 			findPathQ(args[args.length-1]);
 		} else if (Opt) {
-			//findPathOpt(args.length-1);
+			findPathOpt(args[args.length-1]);
 		}
 		
 	}
