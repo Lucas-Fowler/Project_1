@@ -259,12 +259,19 @@ public class p1 {
 	public static void findPathS(String str) throws IllegalMapCharacterException, Exception {
 		ArrayList<Position[][]> mazes = scanToMazes(str); //arraylist of every maze in the text file
 		int numMazes = getNumMazes(str);
+		long startTime = System.nanoTime();
+		for (int i = 0; i < numMazes; i++) {
+			Position[][] temp = mazes.get(i);
+			testContains$(temp);
+		}
+		long endTime = System.nanoTime() - startTime;
+		runTime += endTime;
+		if (!solutionExists) {
+			System.out.println("The Wolverine Store is closed.");
+		}
 		for (int i = 0; i < numMazes; i++) {
 			Position[][] temp = mazes.get(i);
 			navigateWithStack(temp);
-		}
-		if (!solutionExists) {
-			System.out.println("The Wolverine Store is closed.");
 		}
 		System.out.println();
 		if (Time) {
@@ -276,12 +283,19 @@ public class p1 {
 	public static void findPathQ(String str) throws IllegalMapCharacterException, Exception {
 		ArrayList<Position[][]> mazes = scanToMazes(str); //arraylist of every maze in the text file
 		int numMazes = getNumMazes(str);
+		long startTime = System.nanoTime();
+		for (int i = 0; i < numMazes; i++) {
+			Position[][] temp = mazes.get(i);
+			testContains$(temp);
+		}
+		long endTime = System.nanoTime() - startTime;
+		runTime += endTime;
+		if (!solutionExists) {
+			System.out.println("The Wolverine Store is closed.");
+		}
 		for (int i = 0; i < numMazes; i++) {
 			Position[][] temp = mazes.get(i);
 			navigateWithQueue(temp);
-		}
-		if (!solutionExists) {
-			System.out.println("The Wolverine Store is closed.");
 		}
 		System.out.println();
 		if (Time) {
@@ -293,12 +307,19 @@ public class p1 {
 	public static void findPathOpt(String file) throws Exception, IllegalMapCharacterException {
 		ArrayList<Position[][]> mazes = scanToMazes(file);
 		int numMazes = getNumMazes(file);
+		long startTime = System.nanoTime();
+		for (int i = 0; i < numMazes; i++) {
+			Position[][] temp = mazes.get(i);
+			testContains$(temp);
+		}
+		long endTime = System.nanoTime() - startTime;
+		runTime += endTime;
+		if (!solutionExists) {
+			System.out.println("The Wolverine Store is closed.");
+		}
 		for (int i = 0; i < numMazes; i++) {
 			Position[][] temp = mazes.get(i);
 			navigateWithOpt(temp);
-		}
-		if (!solutionExists) {
-			System.out.println("The Wolverine Store is closed.");
 		}
 		System.out.println();
 		if (Time) {
@@ -330,8 +351,6 @@ public class p1 {
 			}
 			visited.add(removeFromStack(mainS)); //removing from the beginning of mainQ and adding to visited
 		}
-		//checking if there is a path to get to the $ and updates boolean variable "solutionExists" if a solution does exist
-		stackContains$(visited);
 		
 		removeFromStack(visited);  //removing the W because we aren't changing the symbol to a "+"
 		
@@ -356,14 +375,12 @@ public class p1 {
 		runTime += endTime;
 		
 		//output format
-		if (solutionExists && Outcoordinate) {
+		if (Outcoordinate) {
 			for (int i = coordinates.size()-1; i >= 0; i--) { 
 				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
 			}
 		} else {
-			if (solutionExists) {
-				print2DArray(arr);
-			}
+			print2DArray(arr);
 		}
 	}
 	
@@ -390,9 +407,6 @@ public class p1 {
 			visited.add(mainQ.remove()); //removing from the beginning of mainQ and adding to visited
 		}
 		
-		//checking if there is a path to get to the $ and updates boolean variable "solutionExists" if a solution does exist
-		queueContains$(visited);
-		
 		visited.remove();  //removing the W because we aren't changing the symbol to a "+"
 		
 		visited = reverseQueue(visited); //reverse the Queue so you can backtrack from the $ to the W
@@ -418,14 +432,12 @@ public class p1 {
 		runTime += endTime;		
 		
 		//output format
-		if (solutionExists && Outcoordinate) {
+		if (Outcoordinate) {
 			for (int i = coordinates.size()-1; i >= 0; i--) { 
 				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
 			}
 		} else {
-			if (solutionExists) {
-				print2DArray(arr);
-			}
+			print2DArray(arr);
 		}		
 	}
 	
@@ -451,7 +463,6 @@ public class p1 {
 			visited.add(mainQ.remove()); //removing from the beginning of mainQ and adding to visited
 		}
 		
-		arrContains$(visited);
 		visited.remove(0);
 		
 		ArrayList<Position> coordinates = new ArrayList<Position>();
@@ -475,17 +486,38 @@ public class p1 {
 		runTime += endTime;
 		
 		//output format
-		if (solutionExists && Outcoordinate) {
+		if (Outcoordinate) {
 			for (int i = coordinates.size()-1; i >= 0; i--) { 
 				System.out.println(coordinates.get(i)); //prints from size-1  ->  0
 			}
 		} else {
-			if (solutionExists) {
-				print2DArray(arr);
+			print2DArray(arr);
+		}	
+	}
+	
+	public static void testContains$(Position[][] arr) {
+		long startTime = System.nanoTime();
+		Queue<Position> mainQ = new ArrayDeque<Position>();
+		ArrayList<Position> visited = new ArrayList<Position>();
+		Position w = findW(arr);  //finding position of W
+		int currRow = w.getRow();
+		int currCol = w.getCol();
+		mainQ.add(w);  //adding w into mainQ
+		
+		int[] r = {-1, 1, 0, 0}; //north south east west
+		int[] c = {0, 0, 1, -1};
+		while (!arr[currRow][currCol].getSymbol().equals("$") && !arr[currRow][currCol].getSymbol().equals("|") && !mainQ.isEmpty()) {
+			currRow = mainQ.element().getRow();
+			currCol = mainQ.element().getCol();
+			for (int i = 0; i < 4; i++) {
+				if (isSafeList(currRow+r[i], currCol+c[i], arr, mainQ, visited)) { //checking if surrounding elements are valid
+					mainQ.add(arr[currRow+r[i]][currCol+c[i]]); //adding them to the mainQ
+				}
 			}
+			visited.add(mainQ.remove()); //removing from the beginning of mainQ and adding to visited
 		}
 		
-		
+		arrContains$(visited);
 	}
 	
 	//next 2 methods are for Stacks
