@@ -1,6 +1,6 @@
 package maze;
 
-public class IncompleteMapException extends Throwable {
+public class IncompleteMapException extends Exception {
 	public IncompleteMapException(String errorMessage) {
 		super(errorMessage);
 	}
